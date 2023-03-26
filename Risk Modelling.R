@@ -1,4 +1,6 @@
 data <- read.csv("C:/Users/mehdi/Desktop/credit_risk_dataset.csv")
+
+# Exploratory analysis
 View(data)
 summary(data)
 
@@ -18,7 +20,7 @@ hist(data$loan_percent_income,breaks=10,xlab = "Loan Percent Income",
 hist(data$cb_person_cred_hist_length,breaks=10,xlab = "Credit History Lengths", 
      main = "Histogram Credit History Lengths")
 
-
+#Starting deleting outliers
 
 plot(data$person_age, data$person_income, xlab = "Age", ylab = "Income")
 plot(data$person_age, xlab = "Age")
@@ -86,7 +88,7 @@ data <- data[data$person_emp_length <= 15, ]
 boxplot(data$person_emp_length, main="Boxplot Person Employment Lengths", xlab="Employment Lengths", ylab="Value")
 
 
-
+#Finding NA values and deleting NA rows
 summary(data)
 sum(is.na(data$loan_grade))
 data <- na.omit(data)
@@ -95,24 +97,26 @@ data <- na.omit(data)
 summary(data)
 
 
-
+#Creating training and test sets
 set.seed(333)
 index_train <- sample(1:nrow(data), 0.7 * nrow(data))
 training_set <- data[index_train, ]
 test_set <- data[-index_train, ]
 
+
+#Creating various logistic regression 
 library(glm)
 
 
 model_3_logit <- glm(loan_status ~ person_income  + loan_grade +
-                           person_home_ownership  , family = "binomial", data = training_set)
+                             person_home_ownership  , family = "binomial", data = training_set)
 model_3_logit
 summary(model_3_logit)
 
 
 
 model_5_logit <- glm(loan_status ~ person_income  + loan_grade + loan_amnt +person_income
-                       +person_home_ownership  , family = "binomial", data = training_set)
+                     +person_home_ownership  , family = "binomial", data = training_set)
 model_5_logit
 summary(model_5_logit)
 
@@ -120,14 +124,14 @@ summary(model_5_logit)
 
 
 model_3_probit <- glm(loan_status ~ person_income  + loan_grade +
-                       person_home_ownership  , family = binomial(link = "probit"), data = training_set)
+                              person_home_ownership  , family = binomial(link = "probit"), data = training_set)
 model_3_probit
 summary(model_3_probit)
 
 
 
 model_5_probit <- glm(loan_status ~ person_income  + loan_grade + loan_amnt + person_income
-                     +person_home_ownership  , family = binomial(link = "probit"), data = training_set)
+                      +person_home_ownership  , family = binomial(link = "probit"), data = training_set)
 model_5_probit
 summary(model_5_probit)
 
@@ -135,14 +139,14 @@ summary(model_5_probit)
 
 
 model_3_clog <- glm(loan_status ~ person_income  + loan_grade +
-                              person_home_ownership  , family = binomial(link = "cloglog"), data = training_set)
+                            person_home_ownership  , family = binomial(link = "cloglog"), data = training_set)
 model_3_clog
 summary(model_3_clog)
 
 
 
 model_5_clog <- glm(loan_status ~ person_income  + loan_grade + loan_amnt + person_income
-                      +person_home_ownership  , family = binomial(link = "cloglog"), data = training_set)
+                    +person_home_ownership  , family = binomial(link = "cloglog"), data = training_set)
 model_5_clog
 summary(model_5_clog)
 
@@ -155,14 +159,14 @@ summary(model_7_probit)
 
 
 model_7_clog <- glm(loan_status ~ person_income  + loan_grade + loan_amnt + person_income
-                      +person_home_ownership+loan_intent+person_emp_length  , family = binomial(link = "cloglog"), data = training_set)
+                    +person_home_ownership+loan_intent+person_emp_length  , family = binomial(link = "cloglog"), data = training_set)
 model_7_clog
 summary(model_7_clog)
 
 
 
 model_7_logit <- glm(loan_status ~ person_income  + loan_grade + loan_amnt + person_income
-                      +person_home_ownership+loan_intent+person_emp_length  , family = binomial(link = "logit"), data = training_set)
+                     +person_home_ownership+loan_intent+person_emp_length  , family = binomial(link = "logit"), data = training_set)
 model_7_logit
 summary(model_7_logit)
 
@@ -178,14 +182,14 @@ summary(model_8_probit)
 
 
 model_8_clog <- glm(loan_status ~ person_income  + loan_grade + loan_amnt + person_income
-                                             +person_home_ownership+loan_intent+person_emp_length+cb_person_cred_hist_length  , family = binomial(link = "cloglog"), data = training_set)
+                    +person_home_ownership+loan_intent+person_emp_length+cb_person_cred_hist_length  , family = binomial(link = "cloglog"), data = training_set)
 model_8_clog
 summary(model_8_clog)
 
 
 
 model_8_logit <- glm(loan_status ~ person_income  + loan_grade + loan_amnt + person_income
-                                             +person_home_ownership+loan_intent+person_emp_length+cb_person_cred_hist_length  , family = binomial(link = "logit"), data = training_set)
+                     +person_home_ownership+loan_intent+person_emp_length+cb_person_cred_hist_length  , family = binomial(link = "logit"), data = training_set)
 model_8_logit
 summary(model_8_logit)
 
@@ -205,9 +209,9 @@ predictions_model_8_probit <- predict(model_8_probit, newdata = test_set, type =
 predictions_model_8_logit <- predict(model_8_logit, newdata = test_set, type = "response")
 predictions_model_8_clog <- predict(model_8_clog, newdata = test_set, type = "response")
 
-
-install.packages("proc")
-library(proc)
+#Checking which model is the best based on AUC score and ROC curve
+install.packages("pROC")
+library(pRoc)
 
 
 ROC_3_logit <- roc(test_set$loan_status,predictions_model_3_logit)
@@ -254,12 +258,13 @@ auc(ROC_8_clog)
 auc(ROC_8_logit)
 
 
-
+#Defining predictions_model_7_logit (AUC=0.847) as best model and cutoff in 0.2
 cutoff<-quantile(predictions_model_7_logit ,0.8)
 cutoff
 result_after_cutoff_20 <- ifelse(predictions_model_7_logit  > cutoff, 1, 0)
 table(test_set$loan_status, result_after_cutoff_20)
 
+#Seeing desirable considering  accuracy=85%,Specificity=90%,Sensitivity=63% and AUC which shows as model good in defining negative and postive result
 accuracy <- (5000 + 861) / sum(table(test_set$loan_status, result_after_cutoff_20))
 cat("Accuracy:", accuracy, "\n")
 specificity <- 5000 / (5000 + 518)
@@ -268,12 +273,10 @@ sensitivity <- 861 / (513 + 861)
 cat("Sensitivity:", sensitivity, "\n")
 
 
-
+#Here we look at cutoff in 0.20 which leads 9 perent of bad loans in portfolio.
 real_and_prediction <-cbind(test_set$loan_status,result_after_cutoff_20)
 real_and_prediction
 accepted_loans <-real_and_prediction[result_after_cutoff_20==0,1]
 bad_rate <-sum(accepted_loans)/length(accepted_loans)
 bad_rate
-
-
 
